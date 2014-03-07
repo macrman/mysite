@@ -2,3 +2,4 @@
 *.pot
 *.pyc
 *.db
+*.sqlite3

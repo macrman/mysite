@@ -1,3 +1,6 @@
 from django.db import models
 
-# Create your models here.
+
+class TextNote(models.Model):
+    is_published = models.BooleanField()
+    content = models.TextField()
