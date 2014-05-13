@@ -1,4 +1,3 @@
-import datetime
 from django.core.urlresolvers import resolve
 from django.test import TestCase
 from django.http import HttpRequest
@@ -6,7 +5,6 @@ from django.http import HttpRequest
 from notebook.views import homepage
 from notebook.models import TextNote
 
-#things to test> create>save>integrity>query&filter>viewreturns proper context>templaterenders proper html
 
 class NoteModelTest(TestCase):
     '''
@@ -15,35 +13,33 @@ class NoteModelTest(TestCase):
     '''
     def setUp(self):
         '''
-        create TextNotes objects through both instantiation of 
-        the model + save(), as well as using the create() method
-        shortcut
+        create TextNotes objects, publish 2,4,5
         '''
         #here we use instantiation + save()
         mynote = TextNote()
-        mynote.content = b'<html>hello world</html>'
+        mynote.content = '1st'
         mynote.is_published = False
         mynote.save()
 
         #here we use the create() shortcut
         TextNote.objects.create(
-            content='first one where pub is true',
+            content='2nd',
             is_published=True,
         )
         TextNote.objects.create(
-            content='hello',
+            content='3rd',
             is_published=False,
         )
         TextNote.objects.create(
-            content='world',
+            content='4th',
             is_published=True,
         )
         TextNote.objects.create(
-            content='foo',
+            content='5th',
             is_published=True,
         )
 
-    def test_integrity_and_querying_of_textnotes(self):
+    def test_integrity(self):
         '''
         Test TextNote objects were saved properly
         '''
@@ -51,19 +47,44 @@ class NoteModelTest(TestCase):
         all_notes = TextNote.objects.all()
         # check that we have 5 items
         self.assertEqual(all_notes.count(), 5)
-    
-        #query notes were published=True, there should be 3
-        published_notes = all_notes.filter(is_published=True)
-        self.assertEqual(published_notes.count(), 3)
-        
-        #out of the published notes, get the first one, check its attributes
-        ##FIX THIS!!!! DON'T ASSUME DJANGO ORDERS THINGS CHRONOLOGICALLY
-        #published_notes.order_by('create_date')
-        ##also double check my assertions arn't backwards
-        first_note = published_notes.first()
-        self.assertIn('first', first_note.content)
-        self.assertTrue(first_note.is_published)
 
+    def test_filtering_and_querying(self):
+    
+        #let's get all the published notes, there should be 3
+        published_notes = TextNote.objects.filter(is_published=True)
+        self.assertEqual(published_notes.count(), 3)
+
+        #sort the notes by pub_date
+        sorted_pub_notes = published_notes.order_by('pub_date')
+
+        #get the first one, first note should be the first one 'published'
+        # aka #2
+        first_pubed_note = sorted_pub_notes.first()
+        self.assertEqual(first_pubed_note.content, '2nd')
+
+    def test_publishing_notes(self):
+        '''
+        When a user publishes a note, the pub_date should
+        automatically be added.
+        '''
+        # lets get one of the unpublished notes, sort by date created
+        unpubed_notes = TextNote.objects.filter(is_published=False).order_by('date_created')
+
+        # we'll take the newest one and publish it (should be #3)
+        to_be_pubed = unpubed_notes.last()
+        to_be_pubed.is_published = True
+        to_be_pubed.save()
+
+
+        self.assertEqual(to_be_pubed.content, '3rd') 
+
+        # now lets query all the pubed notes and check the one
+        # we just pubed is the newest
+        pubed_notes = TextNote.objects.filter(is_published=True)
+        latest_note = pubed_notes.order_by('pub_date').last()
+        self.assertEqual(latest_note.content, '3rd')
+
+        
 class HomePageTest(TestCase):
     '''
     Tests that the home page returns a list of notes
