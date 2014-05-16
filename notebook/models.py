@@ -16,3 +16,5 @@ class TextNote(models.Model):
             self.pub_date = datetime.datetime.utcnow().replace(tzinfo=utc)
         super(TextNote, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return self.content

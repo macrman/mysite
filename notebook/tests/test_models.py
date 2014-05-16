@@ -1,8 +1,5 @@
-from django.core.urlresolvers import resolve
 from django.test import TestCase
-from django.http import HttpRequest
 
-from notebook.views import homepage
 from notebook.models import TextNote
 
 
@@ -85,42 +82,3 @@ class NoteModelTest(TestCase):
         self.assertEqual(latest_note.content, '3rd')
 
         
-class HomePageTest(TestCase):
-    '''
-    Tests that the home page returns a list of notes
-    '''
-    def setUp(self):
-        TextNote.objects.create(
-            content='hello',
-            is_published=False,
-        )
-        TextNote.objects.create(
-            content='world',
-            is_published=True,
-        )
-        TextNote.objects.create(
-            content='foo',
-            is_published=True,
-        )
-
-    def test_root_url_resolves_to_homepage_view(self):
-        found = resolve('/')
-        self.assertEqual(found.func, homepage)
-
-    def test_homepage_view(self):
-        '''
-        visit homepg, get list of notes that are published
-        test homepageview returns correct context objects
-        '''
-
-        request = HttpRequest()
-        response = homepage(request)
-
-
-
-       #self.assertTrue(response.content.startswith(b'<html>'))
-       #self.assertIn(b'<title>mac</title>', response.content)
-       #self.assertTrue(response.content.endswith(b'</html>'))
-
-
-
